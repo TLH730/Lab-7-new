@@ -10,7 +10,8 @@ from sklearn.linear_model import LinearRegression
 @st.cache_data
 def load_data():
     # Read the dataset from the local file in the GitHub repository
-    df = pd.read_csv('AmesHousing.xlsx')
+    df = pd.read_excel("AmesHousing.xlsx", engine="openpyxl")
+
     return df
 
 df = load_data()
