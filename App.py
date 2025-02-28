@@ -12,7 +12,7 @@ from sklearn.metrics import mean_squared_error
 def load_data():
     try:
         # Specify the sheet name and engine; adjust 'Sheet1' as needed
-        df = pd.read_excel('AmesHousing.xlsx', sheet_name='Sheet1', engine='openpyxl')
+        df = pd.read_excel('AmesHousing.xlsx')
         # Ensure the necessary columns exist
         required_columns = ['OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt', 'SalePrice']
         for col in required_columns:
