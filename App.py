@@ -3,114 +3,91 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 
-st.write("Starting the app...")
+# App title
+st.title("Ames Housing Price Predictor")
 
 # --------------------------
-# 1. Load and Preprocess the Data
+# Data Loading and Preprocessing
 # --------------------------
+@st.cache_data
 def load_data():
-    file_name = 'AmesHousing.xlsx'
-    st.write("Attempting to load file:", file_name)
-    
-    # Try reading as an Excel workbook using openpyxl
-    try:
-        excel_file = pd.ExcelFile(file_name, engine="openpyxl")
-        st.write("Excel file detected. Sheets found:", excel_file.sheet_names)
-        if excel_file.sheet_names:
-            df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
-            st.write("Data loaded successfully from Excel!")
-            return df
-        else:
-            st.write("No worksheets found in the Excel file.")
-    except Exception as e:
-        st.write("Error reading file as Excel:", e)
-    
-    # Fallback: try reading as CSV while skipping problematic lines
-    try:
-        st.write("Attempting to read file as CSV with utf-8 encoding and skipping bad lines...")
-        df = pd.read_csv(file_name, encoding="utf-8", on_bad_lines='skip')
-        st.write("Data loaded successfully as CSV using utf-8!")
-        return df
-    except Exception as e:
-        st.write("UTF-8 CSV read failed:", e)
-        st.write("Attempting to read file as CSV with latin1 encoding and skipping bad lines...")
-        try:
-            df = pd.read_csv(file_name, encoding="latin1", on_bad_lines='skip')
-            st.write("Data loaded successfully as CSV using latin1!")
-            return df
-        except Exception as e:
-            st.error(f"Error reading file {file_name} as CSV: {e}")
-            st.stop()
+    # Read the dataset from the local file in the GitHub repository
+    df = pd.read_excel('AmesHousing(1).xlsx')
+    return df
 
 df = load_data()
 
-st.title("Ames Housing Price Predictor")
-st.write("This app predicts housing prices in Ames, Iowa based on user input features.")
+st.write("### Dataset Preview")
+st.write(df.head())
 
-# Define the required columns (adjust if your dataset structure differs)
-required_columns = [
-    "OverallQual",    # Overall material and finish quality
-    "GrLivArea",      # Above ground living area (sq ft)
-    "GarageCars",     # Number of cars that can fit in the garage
-    "TotalBsmtSF",    # Total basement square feet
-    "FullBath",       # Full bathrooms above grade
-    "YearBuilt",      # Original construction date
-    "SalePrice"       # Target variable
-]
+# For simplicity, drop rows with missing values.
+df = df.dropna()
 
-# Check if the dataset contains all required columns
-if not set(required_columns).issubset(df.columns):
-    st.error("The dataset is missing one or more required columns: " + ", ".join(required_columns))
+# --------------------------
+# Feature Selection and Splitting
+# --------------------------
+# Assume the target variable is 'SalePrice'
+if 'SalePrice' not in df.columns:
+    st.error("Error: The dataset does not contain a 'SalePrice' column.")
     st.stop()
 
-# Select only the required columns and drop rows with missing values
-df = df[required_columns].dropna()
+# Define a subset of features to use in the model.
+# (Modify these as needed based on your dataset's columns.)
+selected_features = ['OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
 
-# --------------------------
-# 2. Split the Data and Train the Regression Model
-# --------------------------
-features = ["OverallQual", "GrLivArea", "GarageCars", "TotalBsmtSF", "FullBath", "YearBuilt"]
+# Check if the selected features exist in the dataset.
+features = [feat for feat in selected_features if feat in df.columns]
+if not features:
+    st.error("Error: None of the selected features exist in the dataset.")
+    st.stop()
+
 X = df[features]
-y = df["SalePrice"]
+y = df['SalePrice']
 
+# Split the data into training and testing sets.
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = LinearRegression()
+# --------------------------
+# Model Training
+# --------------------------
+# Create a pipeline that scales the features then applies Linear Regression.
+model = make_pipeline(StandardScaler(), LinearRegression())
 model.fit(X_train, y_train)
-st.write("Model training complete.")
+
+st.write("### Model Training Completed")
+st.write("The regression model has been trained on the Ames Housing dataset.")
 
 # --------------------------
-# 3. Create the Streamlit Web App for User Input
+# Sidebar: User Input for Prediction
 # --------------------------
-st.sidebar.header("Input House Features")
+st.sidebar.header("Input Features for Prediction")
 
 def user_input_features():
-    overall_qual = st.sidebar.number_input("Overall Quality (1-10)", min_value=1, max_value=10, value=5)
-    gr_liv_area = st.sidebar.number_input("Above Ground Living Area (sq ft)", min_value=300, max_value=10000, value=1500)
-    garage_cars = st.sidebar.number_input("Garage Cars", min_value=0, max_value=5, value=1)
-    total_bsmt_sf = st.sidebar.number_input("Total Basement Area (sq ft)", min_value=0, max_value=5000, value=800)
-    full_bath = st.sidebar.number_input("Full Bathrooms", min_value=0, max_value=5, value=2)
-    year_built = st.sidebar.number_input("Year Built", min_value=1872, max_value=2025, value=1970)
-    
-    data = {
-        "OverallQual": overall_qual,
-        "GrLivArea": gr_liv_area,
-        "GarageCars": garage_cars,
-        "TotalBsmtSF": total_bsmt_sf,
-        "FullBath": full_bath,
-        "YearBuilt": year_built
-    }
-    return pd.DataFrame(data, index=[0])
+    input_data = {}
+    for feature in features:
+        min_val = float(df[feature].min())
+        max_val = float(df[feature].max())
+        mean_val = float(df[feature].mean())
+        # Create a slider for each feature.
+        input_data[feature] = st.sidebar.slider(
+            label=feature,
+            min_value=min_val,
+            max_value=max_val,
+            value=mean_val
+        )
+    return pd.DataFrame([input_data])
 
 input_df = user_input_features()
 
-st.subheader("Input Features")
+st.write("### User Input Features")
 st.write(input_df)
 
 # --------------------------
-# 4. Make a Prediction and Display the Result
+# Prediction
 # --------------------------
 prediction = model.predict(input_df)
-st.subheader("Predicted Sale Price")
+st.write("### Predicted Sale Price")
 st.write(f"${prediction[0]:,.2f}")
