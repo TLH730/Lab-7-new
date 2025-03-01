@@ -16,6 +16,8 @@ st.title("Ames Housing Price Predictor")
 def load_data():
     # Read the dataset from the local file in the GitHub repository
     df = pd.read_excel('AmesHousing (1).xlsx')
+    # Remove extra spaces from column names if any
+    df.columns = df.columns.str.strip()
     return df
 
 df = load_data()
@@ -23,25 +25,30 @@ df = load_data()
 st.write("### Dataset Preview")
 st.write(df.head())
 
+# Display all column names for debugging purposes
+st.write("### Column Names in the Dataset")
+st.write(df.columns.tolist())
+
 # For simplicity, drop rows with missing values.
 df = df.dropna()
 
 # --------------------------
 # Feature Selection and Splitting
 # --------------------------
-# Assume the target variable is 'SalePrice'
+# Ensure that the target variable exists.
 if 'SalePrice' not in df.columns:
     st.error("Error: The dataset does not contain a 'SalePrice' column.")
     st.stop()
 
 # Define a subset of features to use in the model.
-# (Modify these as needed based on your dataset's columns.)
+# Adjust these based on the actual column names you see in the output above.
 selected_features = ['OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
 
-# Check if the selected features exist in the dataset.
+# Filter the selected features to only include those that exist in the dataset.
 features = [feat for feat in selected_features if feat in df.columns]
+
 if not features:
-    st.error("Error: None of the selected features exist in the dataset.")
+    st.error("Error: None of the selected features exist in the dataset. Please update the feature list based on the available columns.")
     st.stop()
 
 X = df[features]
