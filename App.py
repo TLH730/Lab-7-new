@@ -16,7 +16,7 @@ st.title("Ames Housing Price Predictor")
 def load_data():
     # Read the dataset from the local file in the GitHub repository
     df = pd.read_excel('AmesHousing (1).xlsx')
-    # Remove extra spaces from column names if any
+    # Remove extra spaces from column names if any (optional)
     df.columns = df.columns.str.strip()
     return df
 
@@ -40,9 +40,15 @@ if 'SalePrice' not in df.columns:
     st.error("Error: The dataset does not contain a 'SalePrice' column.")
     st.stop()
 
-# Define a subset of features to use in the model.
-# Adjust these based on the actual column names you see in the output above.
-selected_features = ['OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
+# Define a subset of features to use in the model with exact column names.
+selected_features = [
+    'Overall Qual',   # Corrected from 'OverallQual'
+    'Gr Liv Area',    # Corrected from 'GrLivArea'
+    'Garage Cars',    # Corrected from 'GarageCars'
+    'Total Bsmt SF',  # Corrected from 'TotalBsmtSF'
+    'Full Bath',      # This one is already correct
+    'Year Built'      # This one is already correct
+]
 
 # Filter the selected features to only include those that exist in the dataset.
 features = [feat for feat in selected_features if feat in df.columns]
