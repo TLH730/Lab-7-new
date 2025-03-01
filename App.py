@@ -16,12 +16,12 @@ def load_data():
     file_name = 'AmesHousing.xlsx'
     st.write("Attempting to load file:", file_name)
     
-    # First, try reading as an Excel workbook
+    # First, try reading as an Excel workbook using openpyxl
     try:
         excel_file = pd.ExcelFile(file_name, engine="openpyxl")
         st.write("Excel file detected. Sheets found:", excel_file.sheet_names)
         if excel_file.sheet_names:
-            # Read the first worksheet
+            # Read the first available worksheet
             df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
             st.write("Data loaded successfully from Excel!")
             return df
@@ -30,12 +30,21 @@ def load_data():
     except Exception as e:
         st.write("Error reading file as Excel:", e)
     
-    # Fallback: try reading as CSV in case the file is not a proper Excel workbook
+    # Fallback: try reading as CSV
     try:
-        st.write("Attempting to read file as CSV...")
+        st.write("Attempting to read file as CSV with utf-8 encoding...")
         df = pd.read_csv(file_name)
-        st.write("Data loaded successfully as CSV!")
+        st.write("Data loaded successfully as CSV using utf-8!")
         return df
+    except UnicodeDecodeError as ude:
+        st.write("UTF-8 decoding failed, trying with latin1 encoding...")
+        try:
+            df = pd.read_csv(file_name, encoding="latin1")
+            st.write("Data loaded successfully as CSV using latin1!")
+            return df
+        except Exception as e:
+            st.error(f"Error reading file {file_name} as CSV with latin1 encoding: {e}")
+            st.stop()
     except Exception as e:
         st.error(f"Error reading file {file_name} as CSV: {e}")
         st.stop()
@@ -88,29 +97,4 @@ def user_input_features():
     overall_qual = st.sidebar.number_input("Overall Quality (1-10)", min_value=1, max_value=10, value=5)
     gr_liv_area = st.sidebar.number_input("Above Ground Living Area (sq ft)", min_value=300, max_value=10000, value=1500)
     garage_cars = st.sidebar.number_input("Garage Cars", min_value=0, max_value=5, value=1)
-    total_bsmt_sf = st.sidebar.number_input("Total Basement Area (sq ft)", min_value=0, max_value=5000, value=800)
-    full_bath = st.sidebar.number_input("Full Bathrooms", min_value=0, max_value=5, value=2)
-    year_built = st.sidebar.number_input("Year Built", min_value=1872, max_value=2025, value=1970)
-    
-    # Build a DataFrame from the user inputs matching the training features
-    data = {
-        "OverallQual": overall_qual,
-        "GrLivArea": gr_liv_area,
-        "GarageCars": garage_cars,
-        "TotalBsmtSF": total_bsmt_sf,
-        "FullBath": full_bath,
-        "YearBuilt": year_built,
-    }
-    return pd.DataFrame(data, index=[0])
-
-input_df = user_input_features()
-
-st.subheader("Input Features")
-st.write(input_df)
-
-# --------------------------
-# 4. Make a Prediction and Display the Result
-# --------------------------
-prediction = model.predict(input_df)
-st.subheader("Predicted Sale Price")
-st.write(f"${prediction[0]:,.2f}")
+    total_bsmt_sf = st.sidebar.number_input("Total Basement Area (sq ft)", min_value=0, max_
