@@ -15,19 +15,29 @@ st.write("Starting the app...")
 def load_data():
     file_name = 'AmesHousing.xlsx'
     st.write("Attempting to load file:", file_name)
+    
+    # First, try reading as an Excel workbook
     try:
-        # Use ExcelFile to inspect available sheets using the openpyxl engine
         excel_file = pd.ExcelFile(file_name, engine="openpyxl")
-        st.write("Available sheets in file:", excel_file.sheet_names)
-        if not excel_file.sheet_names:
-            st.error("No worksheets found in the Excel file. Please verify the file.")
-            st.stop()
-        # Read the first available worksheet
-        df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
-        st.write("Data loaded successfully!")
+        st.write("Excel file detected. Sheets found:", excel_file.sheet_names)
+        if excel_file.sheet_names:
+            # Read the first worksheet
+            df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
+            st.write("Data loaded successfully from Excel!")
+            return df
+        else:
+            st.write("No worksheets found in the Excel file.")
+    except Exception as e:
+        st.write("Error reading file as Excel:", e)
+    
+    # Fallback: try reading as CSV in case the file is not a proper Excel workbook
+    try:
+        st.write("Attempting to read file as CSV...")
+        df = pd.read_csv(file_name)
+        st.write("Data loaded successfully as CSV!")
         return df
     except Exception as e:
-        st.error(f"Error reading {file_name}: {e}")
+        st.error(f"Error reading file {file_name} as CSV: {e}")
         st.stop()
 
 df = load_data()
