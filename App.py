@@ -15,7 +15,7 @@ st.title("Ames Housing Price Predictor")
 @st.cache_data
 def load_data():
     # Read the dataset from the local file in the GitHub repository
-    df = pd.read_excel('AmesHousing(1).xlsx')
+    df = pd.read_excel('AmesHousing (1).xlsx')
     return df
 
 df = load_data()
