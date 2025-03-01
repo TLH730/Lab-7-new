@@ -4,9 +4,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
-# --------------------------
-# Debug: Starting the app
-# --------------------------
 st.write("Starting the app...")
 
 # --------------------------
@@ -16,12 +13,11 @@ def load_data():
     file_name = 'AmesHousing.xlsx'
     st.write("Attempting to load file:", file_name)
     
-    # First, try reading as an Excel workbook using openpyxl
+    # Try reading as an Excel workbook using openpyxl
     try:
         excel_file = pd.ExcelFile(file_name, engine="openpyxl")
         st.write("Excel file detected. Sheets found:", excel_file.sheet_names)
         if excel_file.sheet_names:
-            # Read the first available worksheet
             df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
             st.write("Data loaded successfully from Excel!")
             return df
@@ -30,24 +26,22 @@ def load_data():
     except Exception as e:
         st.write("Error reading file as Excel:", e)
     
-    # Fallback: try reading as CSV
+    # Fallback: try reading as CSV while skipping problematic lines
     try:
-        st.write("Attempting to read file as CSV with utf-8 encoding...")
-        df = pd.read_csv(file_name)
+        st.write("Attempting to read file as CSV with utf-8 encoding and skipping bad lines...")
+        df = pd.read_csv(file_name, encoding="utf-8", on_bad_lines='skip')
         st.write("Data loaded successfully as CSV using utf-8!")
         return df
-    except UnicodeDecodeError:
-        st.write("UTF-8 decoding failed, trying with latin1 encoding...")
+    except Exception as e:
+        st.write("UTF-8 CSV read failed:", e)
+        st.write("Attempting to read file as CSV with latin1 encoding and skipping bad lines...")
         try:
-            df = pd.read_csv(file_name, encoding="latin1")
+            df = pd.read_csv(file_name, encoding="latin1", on_bad_lines='skip')
             st.write("Data loaded successfully as CSV using latin1!")
             return df
         except Exception as e:
-            st.error(f"Error reading file {file_name} as CSV with latin1 encoding: {e}")
+            st.error(f"Error reading file {file_name} as CSV: {e}")
             st.stop()
-    except Exception as e:
-        st.error(f"Error reading file {file_name} as CSV: {e}")
-        st.stop()
 
 df = load_data()
 
@@ -80,10 +74,8 @@ features = ["OverallQual", "GrLivArea", "GarageCars", "TotalBsmtSF", "FullBath",
 X = df[features]
 y = df["SalePrice"]
 
-# Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train a simple linear regression model
 model = LinearRegression()
 model.fit(X_train, y_train)
 st.write("Model training complete.")
@@ -101,7 +93,6 @@ def user_input_features():
     full_bath = st.sidebar.number_input("Full Bathrooms", min_value=0, max_value=5, value=2)
     year_built = st.sidebar.number_input("Year Built", min_value=1872, max_value=2025, value=1970)
     
-    # Build a DataFrame from the user inputs matching the training features
     data = {
         "OverallQual": overall_qual,
         "GrLivArea": gr_liv_area,
