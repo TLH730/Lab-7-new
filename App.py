@@ -16,48 +16,44 @@ st.title("Ames Housing Price Predictor")
 def load_data():
     # Read the dataset from the local file in the GitHub repository
     df = pd.read_excel('AmesHousing (1).xlsx')
-    # Remove extra spaces from column names if any (optional)
+    # Remove extra spaces from column names if any
     df.columns = df.columns.str.strip()
     return df
 
 df = load_data()
 
+# Display initial dataset information for debugging
 st.write("### Dataset Preview")
 st.write(df.head())
+st.write("### Dataset Shape Before Cleaning:", df.shape)
 
-# Display all column names for debugging purposes
-st.write("### Column Names in the Dataset")
-st.write(df.columns.tolist())
+# Define a subset of features with exact column names.
+selected_features = [
+    'Overall Qual',   # Correct column name
+    'Gr Liv Area',    # Correct column name
+    'Garage Cars',    # Correct column name
+    'Total Bsmt SF',  # Correct column name
+    'Full Bath',      # Correct column name
+    'Year Built'      # Correct column name
+]
 
-# For simplicity, drop rows with missing values.
-df = df.dropna()
+# Drop missing values only for the selected features and target
+df = df.dropna(subset=selected_features + ['SalePrice'])
+st.write("### Dataset Shape After Cleaning:", df.shape)
+
+# Check if the dataset is empty after cleaning
+if df.empty:
+    st.error("Dataset is empty after cleaning. Please check your data or consider imputing missing values instead of dropping them.")
+    st.stop()
 
 # --------------------------
 # Feature Selection and Splitting
 # --------------------------
-# Ensure that the target variable exists.
 if 'SalePrice' not in df.columns:
     st.error("Error: The dataset does not contain a 'SalePrice' column.")
     st.stop()
 
-# Define a subset of features to use in the model with exact column names.
-selected_features = [
-    'Overall Qual',   # Corrected from 'OverallQual'
-    'Gr Liv Area',    # Corrected from 'GrLivArea'
-    'Garage Cars',    # Corrected from 'GarageCars'
-    'Total Bsmt SF',  # Corrected from 'TotalBsmtSF'
-    'Full Bath',      # This one is already correct
-    'Year Built'      # This one is already correct
-]
-
-# Filter the selected features to only include those that exist in the dataset.
-features = [feat for feat in selected_features if feat in df.columns]
-
-if not features:
-    st.error("Error: None of the selected features exist in the dataset. Please update the feature list based on the available columns.")
-    st.stop()
-
-X = df[features]
+X = df[selected_features]
 y = df['SalePrice']
 
 # Split the data into training and testing sets.
@@ -66,7 +62,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # --------------------------
 # Model Training
 # --------------------------
-# Create a pipeline that scales the features then applies Linear Regression.
 model = make_pipeline(StandardScaler(), LinearRegression())
 model.fit(X_train, y_train)
 
@@ -80,11 +75,10 @@ st.sidebar.header("Input Features for Prediction")
 
 def user_input_features():
     input_data = {}
-    for feature in features:
+    for feature in selected_features:
         min_val = float(df[feature].min())
         max_val = float(df[feature].max())
         mean_val = float(df[feature].mean())
-        # Create a slider for each feature.
         input_data[feature] = st.sidebar.slider(
             label=feature,
             min_value=min_val,
