@@ -4,20 +4,24 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
+st.write("Starting the app...")
+
 # -------------------------------------------------
 # 1. Load and Preprocess the Data
 # -------------------------------------------------
-@st.cache_data
 def load_data():
     file_name = 'AmesHousing.xlsx'
+    st.write("Attempting to load:", file_name)
     try:
         # Use ExcelFile to inspect available sheets using the openpyxl engine
         excel_file = pd.ExcelFile(file_name, engine="openpyxl")
+        st.write("Available sheets:", excel_file.sheet_names)
         if not excel_file.sheet_names:
             st.error("No worksheets found in the Excel file. Please check the file.")
             st.stop()
         # Read the first available worksheet
         df = pd.read_excel(file_name, sheet_name=excel_file.sheet_names[0], engine="openpyxl")
+        st.write("Data loaded successfully!")
         return df
     except Exception as e:
         st.error(f"Error reading {file_name}: {e}")
@@ -58,6 +62,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 model = LinearRegression()
 model.fit(X_train, y_train)
+st.write("Model training complete.")
 
 # -------------------------------------------------
 # 3. Create the Streamlit Web App for User Input
@@ -72,7 +77,6 @@ def user_input_features():
     full_bath = st.sidebar.number_input("Full Bathrooms", min_value=0, max_value=5, value=2)
     year_built = st.sidebar.number_input("Year Built", min_value=1872, max_value=2025, value=1970)
     
-    # Build a DataFrame from the user inputs matching the features used in the model
     data = {
         "OverallQual": overall_qual,
         "GrLivArea": gr_liv_area,
