@@ -16,7 +16,7 @@ def load_data():
     file_name = 'AmesHousing.xlsx'
     st.write("Attempting to load file:", file_name)
     try:
-        # Use ExcelFile to inspect available sheets with the openpyxl engine
+        # Use ExcelFile to inspect available sheets using the openpyxl engine
         excel_file = pd.ExcelFile(file_name, engine="openpyxl")
         st.write("Available sheets in file:", excel_file.sheet_names)
         if not excel_file.sheet_names:
@@ -89,4 +89,18 @@ def user_input_features():
         "GarageCars": garage_cars,
         "TotalBsmtSF": total_bsmt_sf,
         "FullBath": full_bath,
-        "YearBuilt": year_
+        "YearBuilt": year_built,
+    }
+    return pd.DataFrame(data, index=[0])
+
+input_df = user_input_features()
+
+st.subheader("Input Features")
+st.write(input_df)
+
+# --------------------------
+# 4. Make a Prediction and Display the Result
+# --------------------------
+prediction = model.predict(input_df)
+st.subheader("Predicted Sale Price")
+st.write(f"${prediction[0]:,.2f}")
