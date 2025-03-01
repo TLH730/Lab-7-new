@@ -36,7 +36,7 @@ def load_data():
         df = pd.read_csv(file_name)
         st.write("Data loaded successfully as CSV using utf-8!")
         return df
-    except UnicodeDecodeError as ude:
+    except UnicodeDecodeError:
         st.write("UTF-8 decoding failed, trying with latin1 encoding...")
         try:
             df = pd.read_csv(file_name, encoding="latin1")
@@ -97,4 +97,29 @@ def user_input_features():
     overall_qual = st.sidebar.number_input("Overall Quality (1-10)", min_value=1, max_value=10, value=5)
     gr_liv_area = st.sidebar.number_input("Above Ground Living Area (sq ft)", min_value=300, max_value=10000, value=1500)
     garage_cars = st.sidebar.number_input("Garage Cars", min_value=0, max_value=5, value=1)
-    total_bsmt_sf = st.sidebar.number_input("Total Basement Area (sq ft)", min_value=0, max_
+    total_bsmt_sf = st.sidebar.number_input("Total Basement Area (sq ft)", min_value=0, max_value=5000, value=800)
+    full_bath = st.sidebar.number_input("Full Bathrooms", min_value=0, max_value=5, value=2)
+    year_built = st.sidebar.number_input("Year Built", min_value=1872, max_value=2025, value=1970)
+    
+    # Build a DataFrame from the user inputs matching the training features
+    data = {
+        "OverallQual": overall_qual,
+        "GrLivArea": gr_liv_area,
+        "GarageCars": garage_cars,
+        "TotalBsmtSF": total_bsmt_sf,
+        "FullBath": full_bath,
+        "YearBuilt": year_built
+    }
+    return pd.DataFrame(data, index=[0])
+
+input_df = user_input_features()
+
+st.subheader("Input Features")
+st.write(input_df)
+
+# --------------------------
+# 4. Make a Prediction and Display the Result
+# --------------------------
+prediction = model.predict(input_df)
+st.subheader("Predicted Sale Price")
+st.write(f"${prediction[0]:,.2f}")
